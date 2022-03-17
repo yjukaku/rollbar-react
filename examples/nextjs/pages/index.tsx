@@ -4,12 +4,26 @@ import Image from 'next/image'
 import { useCallback, useState } from 'react';
 import styles from '../styles/Home.module.css'
 
+import Rollbar from 'rollbar';
 import { useRollbar, RollbarContext } from '@rollbar/react';
 
 const Home: NextPage = () => {
-  const rollbar = useRollbar();
+  const rollbarConfig = {
+    autoInstrument: {
+      network: true,
+      networkResponseHeaders: true,
+      networkResponseBody: true,
+      networkRequestBody: true,
+      log: true,
+      dom: false,
+      navigation: true,
+      connectivity: true
+    }
+  }
+  const rollbar = new Rollbar(rollbarConfig);
 
-  const sendMessage = useCallback(() => {
+  const sendMessage = useCallback(async () => {
+    await fetch("/api/hello", { headers: new Headers({"content-type": "application/json"}) })
     rollbar.info('manual message');
   }, [rollbar])
 
@@ -20,7 +34,7 @@ const Home: NextPage = () => {
   }
 
   return (
-    <RollbarContext context="">
+    <RollbarContext instance={rollbar}>
       <div className={styles.container}>
         <Head>
           <title>Create Next App</title>
